@@ -19,4 +19,28 @@ var hdfs = new HDFS({
     url: 'https://server:port/webhdfs/v1/'
 });
 
-console.log(hdfs.listDirectory('/dir'));
+# Routes
+
+## List a directory
+
+The first argument is the remote directory on HDFS. This will list all the files in that remote directory.
+
+Returns a promise.
+
+```
+hdfs.listDirectory('dir').then(function(response) {
+    console.log(response);
+});
+```
+
+## Upload a file
+
+Still working on this one.
+
+Returns a promise.
+
+```
+hdfs.upload('/path/to/file', data).then(function(response) {
+    console.log(response);
+});
+```
