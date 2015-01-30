@@ -19,5 +19,9 @@
   "bugs": {
     "url": "https://github.com/scottlabs/ibm-hdfs/issues"
   },
-  "homepage": "https://github.com/scottlabs/ibm-hdfs"
+  "homepage": "https://github.com/scottlabs/ibm-hdfs",
+  "dependencies": {
+    "q": "^1.1.2",
+    "request": "^2.51.0"
+  }
 }
