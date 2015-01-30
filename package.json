@@ -1,0 +1,23 @@
+{
+  "name": "ibm-hdfs",
+  "version": "0.0.1",
+  "description": "A wrapper for IBM's HDFS service",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:scottlabs/ibm-hdfs.git"
+  },
+  "keywords": [
+    "ibm",
+    "hdfs"
+  ],
+  "author": "Kevin Scott",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/scottlabs/ibm-hdfs/issues"
+  },
+  "homepage": "https://github.com/scottlabs/ibm-hdfs"
+}
