@@ -36,12 +36,54 @@ hdfs.listDirectory('dir').then(function(response) {
 
 ## Upload a file
 
-Still working on this one.
+First argument is the remote path to upload to.
+
+Second argument is either a string consisting of data to upload, or a string containing a local file path. The function will first attempt to find the file locally, and on fail use the string contents.
 
 Returns a promise.
 
 ```
-hdfs.upload('/path/to/file', data).then(function(response) {
+// using a string as data
+var contents = 'foo bar!';
+hdfs.upload('/path/to/remote/file', contents).then(function(response) {
+    console.log(response);
+});
+
+// using a local file
+hdfs.upload('/path/to/remote/file', '/path/to/local/file.txt).then(function(response) {
     console.log(response);
 });
 ```
+
+## Download a file
+
+First argument is the remote path to download.
+
+Second argument is optional and specifies a local file path to save the file to.
+
+Returns a promise, with the first argument of the fulfillment function being the contents.
+
+```
+// retrieving contents directly
+hdfs.download('/path/to/remote/file').then(function(response) {
+    console.log(response); // file contents
+});
+
+// specifying local file to download to
+hdfs.download('/path/to/remote/file', '/path/to/local/file').then(function(response) {
+    console.log(response); // file contents
+});
+```
+
+## Remove a file
+
+First argument is the file to remove. Can be a directory or file.
+
+Note: recursive is currently *not* supported, you'll have to implement this yourself.
+
+Returns a promise.
+
+```
+hdfs.remove('/path/to/remote/file').then(function() {
+    console.log('yay');
+});

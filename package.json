@@ -1,10 +1,10 @@
 {
   "name": "ibm-hdfs",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A wrapper for IBM's HDFS service",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha test/test.js"
   },
   "repository": {
     "type": "git",
@@ -22,6 +22,12 @@
   "homepage": "https://github.com/scottlabs/ibm-hdfs",
   "dependencies": {
     "q": "^1.1.2",
-    "request": "^2.51.0"
+    "request": "^2.51.0",
+    "underscore": "^1.7.0"
+  },
+  "devDependencies": {
+    "chai": "^1.10.0",
+    "chai-things": "^0.2.0",
+    "mocha": "^2.1.0"
   }
 }

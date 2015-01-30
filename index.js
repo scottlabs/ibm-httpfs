@@ -1,3 +1,5 @@
+var _ = require('underscore');
+var fs = require('fs');
 var request = require('request').defaults({ jar: true });
 var Q = require('q');
 
@@ -6,8 +8,17 @@ var jarSaved;
 var jarExpiration = 10 * 60 * 60 * 1000; // 10 hours
 
 var HDFS = function(params) {
+    if ( ! params ) { throw new Error("You must provide params."); }
+    if ( ! params.user ) { throw new Error("You must provide a user."); }
+    if ( ! params.password ) { throw new Error("You must provide a password."); }
+    if ( ! params.url ) { throw new Error("You must provide a URL."); }
+
     // parse incoming URL, we'll need the server.
-    var server = params.url.split('://').pop().split(':').shift();
+    var url = params.url.split('://');
+    if ( url.length < 2 ) { throw "You must provide a valid URL."; }
+    url = url.pop().split(':');
+    if ( url.length < 2 ) { throw "You must provide a valid URL."; }
+    var server = url.shift();
 
     function getCookie() {
         var dfd = Q.defer();
@@ -22,8 +33,8 @@ var HDFS = function(params) {
         request.post({
             url: url,
             form: {
-                j_username: config.user,
-                j_password: config.password,
+                j_username: params.user,
+                j_password: params.password,
             },
             jar: j
         }, function (error, response, body) {
@@ -50,7 +61,7 @@ var HDFS = function(params) {
         }
         return dfd.promise;
     };
-    function makeRequest(query) {
+    function makeRequest(query, options) {
         var dfd = Q.defer();
         var port = 14443;
         var path = '/webhdfs/v1/';
@@ -58,14 +69,23 @@ var HDFS = function(params) {
         var url = 'https://' + server + ':' + port + path + query;
 
         getToken().then(function(j) {
-            request.get({
-                url: url,
-                jar: j
-            }, function (error, response, body) {
+            request(_.extend({
+                uri: url,
+                jar: j,
+                method: 'get'
+            }, options), function (error, response, body) {
                 if ( error ) {
                     dfd.reject(error);
                 } else {
-                    dfd.resolve(body);
+                    // don't worry about this, not a big deal.
+                    try { body = JSON.parse(body);
+                    } catch(e) { }
+
+                    if ( body['RemoteException'] ) {
+                        dfd.reject(body);
+                    } else {
+                        dfd.resolve(body);
+                    }
                 }
             });
         });
@@ -79,16 +99,51 @@ var HDFS = function(params) {
         return makeRequest(dir+'?op=LISTSTATUS');
     };
 
-    function upload(file) {
-        return makeRequest('tmp/filename?op=CREATE', {
-            type: 'put'
+    function upload(remoteFile, localFile) {
+        var contents;
+        if ( fs.existsSync(localFile) ) {
+            contents = fs.readFileSync(localFile, 'utf-8');
+        } else {
+            contents = localFile;
+        }
+
+        return makeRequest(remoteFile + '?op=CREATE&data=true', {
+            method: 'put',
+            headers: {
+                'Content-Type': ' application/octet-stream',
+                'Transfer-Encoding': 'chunked'
+            },
+            body: contents
+        });
+    };
+
+    function download(path, local) {
+        if ( local ) {
+            var dfd = Q.defer();
+            makeRequest(path+'?op=OPEN').then(function(response) {
+                fs.writeFile(local, response, function(err) {
+                    if ( err ) { dfd.reject(err); }
+                    else { dfd.resolve(response); }
+                });
+            }).fail(dfd.reject);
+            return dfd.promise;
+        } else {
+            return makeRequest(path+'?op=OPEN');
+        }
+    };
+
+    function remove(path) {
+        return makeRequest(path+'?op=DELETE', {
+            method: 'DELETE'
         });
     };
 
     return {
         listDirectory: listDirectory,
-        upload: upload
+        upload: upload,
+        download: download,
+        remove: remove
     };
-}();
+};
 
 module.exports = HDFS;
