@@ -18,6 +18,7 @@ var hdfs = new HDFS({
     password: 'bar',
     url: 'https://server:port/webhdfs/v1/'
 });
+```
 
 # Routes
 
