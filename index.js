@@ -69,14 +69,18 @@ var HDFS = function(params) {
         var url = 'https://' + server + ':' + port + path + query;
 
         getToken().then(function(j) {
+                console.log('z');
             request(_.extend({
                 uri: url,
                 jar: j,
                 method: 'get'
             }, options), function (error, response, body) {
+                console.log('a');
                 if ( error ) {
                     dfd.reject(error);
                 } else {
+                    console.log(response.req._header);
+                    //console.log(response.headers._header);
                     // don't worry about this, not a big deal.
                     try { body = JSON.parse(body);
                     } catch(e) { }
@@ -101,20 +105,39 @@ var HDFS = function(params) {
 
     function upload(remoteFile, localFile) {
         var contents;
-        if ( fs.existsSync(localFile) ) {
-            contents = fs.readFileSync(localFile, 'utf-8');
-        } else {
-            contents = localFile;
-        }
 
-        return makeRequest(remoteFile + '?op=CREATE&data=true', {
+        var options = {
             method: 'put',
             headers: {
-                'Content-Type': ' application/octet-stream',
+                'Content-Type': 'application/octet-stream',
                 'Transfer-Encoding': 'chunked'
-            },
-            body: contents
-        });
+            }
+        };
+        if ( fs.existsSync(localFile) ) {
+            var file = fs.createReadStream(localFile);
+            options.followAllRedirects = true;
+            options.multipart = [
+                {
+                body: fs.createReadStream(localFile),
+                'content-type' : 'application/octet-stream',
+                'Content-Type' : 'application/octet-stream',
+                }
+            ];
+            //options.multipart = {chunked: true, data: [
+            //]};
+
+            //options.formData = {
+                //field: 'val',
+                //attachments: [
+                    //file
+                //]
+            //};
+        } else {
+            options.body = localFile;
+        }
+
+        console.log(remoteFile);
+        return makeRequest(remoteFile + '?op=CREATE&data=true', options);
     };
 
     function download(path, local) {

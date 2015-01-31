@@ -3,15 +3,28 @@ chai.should();
 chai.use(require('chai-things'));
 var params = require('./params');
 var fs = require('fs');
+var path = require('path');
 
 var HDFS = require('../index');
 
 describe('HDFS', function() {
-    var stringName = 'string.txt';
-    var fileName = 'file.txt';
-    var remoteStringName = 'tmp/string.txt';
-    var remoteFileName = 'tmp/file.txt';
-    var str = 'fooBar';
+    var files = {
+        string: {
+            name: 'string.txt',
+            remote: 'tmp/string.txt',
+            contents: 'fooBar'
+        },
+        file: {
+            name: 'file.txt',
+            remote: 'tmp/file.txt',
+            contents: path.resolve('test/fixtures/file.txt')
+        },
+        big: {
+            name: 'bigger.txt',
+            remote: 'tmp/bigger.txt',
+            contents: path.resolve('test/fixtures/bigger.txt')
+        }
+    }
 
     it('should throw an error if missing arguments', function() {
         HDFS.bind(null).should.throw();
@@ -79,34 +92,46 @@ describe('HDFS', function() {
         });
 
         it('should upload a string', function(done) {
-            hdfs.upload(remoteStringName, str).then(function(body, response) {
+            hdfs.upload(files.string.remote, files.string.contents).then(function(body, response) {
+                //return hdfs.listDirectory('tmp');
+            //}).then(function(results) {
+                //results.should.be.ok();
+                //results.FileStatuses.should.be.ok();
+                //results.FileStatuses.FileStatus.should.be.ok();
+                //results.FileStatuses.FileStatus.should.contain.a.thing.with.property('pathSuffix', files.string.name);
+                done();
+            }).fail(done);
+        });
+
+        it.only('should upload a file', function(done) {
+            hdfs.upload(files.file.remote, files.file.contents).then(function(body, response) {
+                //return hdfs.listDirectory('tmp');
+            //}).then(function(results) {
+                //results.should.be.ok();
+                //results.FileStatuses.should.be.ok();
+                //results.FileStatuses.FileStatus.should.be.ok();
+                //results.FileStatuses.FileStatus.should.contain.a.thing.with.property('pathSuffix', files.file.name);
+                done();
+            }).fail(done);
+        });
+
+        /*
+        it('should upload a big file', function(done) {
+            // big file
+            this.timeout(60000);
+            hdfs.upload(files.big.remote, files.big.contents).then(function(body, response) {
                 return hdfs.listDirectory('tmp');
             }).then(function(results) {
                 results.should.be.ok();
                 results.FileStatuses.should.be.ok();
                 results.FileStatuses.FileStatus.should.be.ok();
-                var files = results.FileStatuses.FileStatus;
-
-                //console.log('results', JSON.stringify(files, null, 2));
-                files.should.contain.a.thing.with.property('pathSuffix', stringName);
+                results.FileStatuses.FileStatus.should.contain.a.thing.with.property('pathSuffix', files.big.name);
+                return hdfs.remove(files.big.remote);
+            }).then(function() {
                 done();
             }).fail(done);
         });
-
-        it('should upload a file', function(done) {
-            var localFile = 'fixtures/'+fileName;
-            hdfs.upload(remoteFileName, localFile).then(function(body, response) {
-                return hdfs.listDirectory('tmp');
-            }).then(function(results) {
-                results.should.be.ok();
-                results.FileStatuses.should.be.ok();
-                results.FileStatuses.FileStatus.should.be.ok();
-                var files = results.FileStatuses.FileStatus;
-
-                files.should.contain.a.thing.with.property('pathSuffix', fileName);
-                done();
-            }).fail(done);
-        });
+        */
     });
 
     describe('Download', function() {
@@ -119,17 +144,19 @@ describe('HDFS', function() {
         });
 
         it('should download a file\'s contents', function(done) {
-            hdfs.download(remoteStringName).then(function(response) {
-                response.should.equal(str);
+            hdfs.download(files.file.remote).then(function(response) {
+                var contents = fs.readFileSync(files.file.contents, 'utf8');
+                response.should.equal(contents);
                 done();
             }).fail(done);
         });
 
         it('should save the file locally', function(done) {
             var localFile = 'tmp.txt';
-            hdfs.download(remoteStringName, localFile).then(function() {
+            var origContent = fs.readFileSync(files.file.contents, 'utf8');
+            hdfs.download(files.file.remote, localFile).then(function() {
                 var contents = fs.readFileSync(localFile, 'utf8');
-                contents.should.equal(str);
+                contents.should.equal(origContent);
                 fs.unlink(localFile, function() {
                     done();
                 });
@@ -147,8 +174,8 @@ describe('HDFS', function() {
         });
 
         it('should remove a remote file', function(done) {
-            hdfs.remove(remoteStringName).then(function() {
-                return hdfs.remove(remoteFileName);
+            hdfs.remove(files.string.remote).then(function() {
+                return hdfs.remove(files.file.remote);
             }).then(function() {
                 return hdfs.listDirectory('tmp');
             }).then(function(results) {
@@ -157,8 +184,8 @@ describe('HDFS', function() {
                 results.FileStatuses.FileStatus.should.be.ok();
                 var files = results.FileStatuses.FileStatus;
 
-                files.should.not.contain.a.thing.with.property('pathSuffix', fileName);
-                files.should.not.contain.a.thing.with.property('pathSuffix', stringName);
+                files.should.not.contain.a.thing.with.property('pathSuffix', files.file.name);
+                files.should.not.contain.a.thing.with.property('pathSuffix', files.string.name);
                 done();
             }).fail(done);
         });
