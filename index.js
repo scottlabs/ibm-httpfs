@@ -41,7 +41,16 @@ var HDFS = function(params) {
             if ( error ) {
                 dfd.reject(error);
             } else {
-                dfd.resolve(j);
+                var cookie_string = j.getCookieString(url).split('; ');
+                if ( cookie_string.length < 2 ) {
+                    // this indicates that login was a failure
+                    dfd.reject({
+                        message: 'Login failed',
+                        exception: 'LoginFailed'
+                    });
+                } else {
+                    dfd.resolve(j);
+                }
             }
         });
 
@@ -55,12 +64,13 @@ var HDFS = function(params) {
                 jar = newJar;
                 jarSaved = (new Date()).getTime();
                 dfd.resolve(jar);
-            });
+            }).fail(dfd.reject);
         } else {
             dfd.resolve(jar);
         }
         return dfd.promise;
     };
+
     function makeRequest(query, options) {
         var dfd = Q.defer();
         var port = 14443;
@@ -69,30 +79,48 @@ var HDFS = function(params) {
         var url = 'https://' + server + ':' + port + path + query;
 
         getToken().then(function(j) {
-                console.log('z');
             request(_.extend({
                 uri: url,
                 jar: j,
                 method: 'get'
             }, options), function (error, response, body) {
-                console.log('a');
                 if ( error ) {
                     dfd.reject(error);
                 } else {
-                    console.log(response.req._header);
-                    //console.log(response.headers._header);
-                    // don't worry about this, not a big deal.
+                    // try and parse as JSON, but don't worry too
+                    // much about getting it right.
                     try { body = JSON.parse(body);
                     } catch(e) { }
 
-                    if ( body['RemoteException'] ) {
-                        dfd.reject(body);
+                    if ( body && body['RemoteException'] ) {
+                        switch(body.RemoteException.exception) {
+                            case 'AccessControlException':
+                                var args = {};
+                                var message = body.RemoteException.message;
+                                var messageArgs = message.split('Permission denied:').pop();
+                                messageArgs.split(',').map(function(arg) {
+                                    arg = arg.split('=');
+                                    if ( arg.length == 2 ) {
+                                        args[arg[0].trim()] = arg[1].trim();
+                                    }
+                                });
+                                dfd.reject({
+                                    message: message,
+                                    javaClassName: body.RemoteException.javaClassName,
+                                    exception: body.RemoteException.exception,
+                                    args: args 
+                                });
+                                break;
+                            default:
+                                dfd.reject(body.RemoteException);
+                                break;
+                        }
                     } else {
                         dfd.resolve(body);
                     }
                 }
             });
-        });
+        }).fail(dfd.reject);
 
         return dfd.promise;
     };
@@ -100,7 +128,11 @@ var HDFS = function(params) {
     // Exposed functions
 
     function listDirectory(dir) {
-        return makeRequest(dir+'?op=LISTSTATUS');
+        return makeRequest(dir+'?op=LISTSTATUS').then(function(results) {
+            if ( results && results.FileStatuses && results.FileStatuses.FileStatus ) {
+                return results.FileStatuses.FileStatus;
+            }
+        });
     };
 
     function upload(remoteFile, localFile) {
@@ -136,7 +168,6 @@ var HDFS = function(params) {
             options.body = localFile;
         }
 
-        console.log(remoteFile);
         return makeRequest(remoteFile + '?op=CREATE&data=true', options);
     };
 
