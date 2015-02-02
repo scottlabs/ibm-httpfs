@@ -1,6 +1,6 @@
 {
   "name": "ibm-hdfs",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "A wrapper for IBM's HDFS service",
   "main": "index.js",
   "scripts": {
