@@ -82,7 +82,7 @@ describe('HDFS', function() {
         });
     });
 
-    describe('Upload', function() {
+    describe.only('Upload', function() {
         // HDFS can be a li'l on the slow side
         this.timeout(20000);
         var hdfs;
@@ -93,29 +93,28 @@ describe('HDFS', function() {
 
         it('should upload a string', function(done) {
             hdfs.upload(files.string.remote, files.string.contents).then(function(body, response) {
-                //return hdfs.listDirectory('tmp');
-            //}).then(function(results) {
-                //results.should.be.ok();
-                //results.FileStatuses.should.be.ok();
-                //results.FileStatuses.FileStatus.should.be.ok();
-                //results.FileStatuses.FileStatus.should.contain.a.thing.with.property('pathSuffix', files.string.name);
+                return hdfs.listDirectory('tmp');
+            }).then(function(results) {
+                results.should.be.ok();
+                results.FileStatuses.should.be.ok();
+                results.FileStatuses.FileStatus.should.be.ok();
+                results.FileStatuses.FileStatus.should.contain.a.thing.with.property('pathSuffix', files.string.name);
                 done();
             }).fail(done);
         });
 
-        it.only('should upload a file', function(done) {
+        it('should upload a file', function(done) {
             hdfs.upload(files.file.remote, files.file.contents).then(function(body, response) {
-                //return hdfs.listDirectory('tmp');
-            //}).then(function(results) {
-                //results.should.be.ok();
-                //results.FileStatuses.should.be.ok();
-                //results.FileStatuses.FileStatus.should.be.ok();
-                //results.FileStatuses.FileStatus.should.contain.a.thing.with.property('pathSuffix', files.file.name);
+                return hdfs.listDirectory('tmp');
+            }).then(function(results) {
+                results.should.be.ok();
+                results.FileStatuses.should.be.ok();
+                results.FileStatuses.FileStatus.should.be.ok();
+                results.FileStatuses.FileStatus.should.contain.a.thing.with.property('pathSuffix', files.file.name);
                 done();
             }).fail(done);
         });
 
-        /*
         it('should upload a big file', function(done) {
             // big file
             this.timeout(60000);
@@ -131,7 +130,6 @@ describe('HDFS', function() {
                 done();
             }).fail(done);
         });
-        */
     });
 
     describe('Download', function() {
