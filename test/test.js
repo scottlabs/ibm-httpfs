@@ -67,12 +67,13 @@ describe('HDFS', function() {
     });
 
     it('should catch a login error', function(done) {
-        this.timeout(10000);
+        this.timeout(5000);
         hdfs = new HDFS({
             user: 'foo',
             password: params.password,
             url: params.url
         });
+
         hdfs.listDirectory('foo').fail(function(err) {
             err.should.be.ok();
             err.message.should.equal('Login failed');
@@ -158,15 +159,12 @@ describe('HDFS', function() {
             }).fail(done);
         });
 
-        /*
         it('should upload a file', function(done) {
             hdfs.upload(files.file.remote, files.file.contents).then(function(body, response) {
-                //return hdfs.listDirectory('tmp');
-            //}).then(function(results) {
-                //results.should.be.ok();
-                //results.FileStatuses.should.be.ok();
-                //results.FileStatuses.FileStatus.should.be.ok();
-                //results.FileStatuses.FileStatus.should.contain.a.thing.with.property('pathSuffix', files.file.name);
+                return hdfs.listDirectory('tmp');
+            }).then(function(results) {
+                results.should.be.ok();
+                results.should.contain.a.thing.with.property('pathSuffix', files.file.name);
                 uploadedFile = true;
                 done();
             }).fail(done);
@@ -179,15 +177,12 @@ describe('HDFS', function() {
                 return hdfs.listDirectory('tmp');
             }).then(function(results) {
                 results.should.be.ok();
-                results.FileStatuses.should.be.ok();
-                results.FileStatuses.FileStatus.should.be.ok();
-                results.FileStatuses.FileStatus.should.contain.a.thing.with.property('pathSuffix', files.big.name);
+                results.should.contain.a.thing.with.property('pathSuffix', files.big.name);
                 return hdfs.remove(files.big.remote);
             }).then(function() {
                 done();
             }).fail(done);
         });
-        */
     });
 
     describe('Download', function() {

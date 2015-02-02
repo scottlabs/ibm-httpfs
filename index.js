@@ -78,12 +78,7 @@ var HDFS = function(params) {
 
         var url = 'https://' + server + ':' + port + path + query;
 
-        getToken().then(function(j) {
-            request(_.extend({
-                uri: url,
-                jar: j,
-                method: 'get'
-            }, options), function (error, response, body) {
+        function requestCallback(error, response, body) {
                 if ( error ) {
                     dfd.reject(error);
                 } else {
@@ -119,7 +114,16 @@ var HDFS = function(params) {
                         dfd.resolve(body);
                     }
                 }
-            });
+        };
+
+        getToken().then(function(j) {
+            var requestOptions = 
+                _.extend({
+                uri: url,
+                jar: j,
+                method: 'get'
+            }, options); 
+            request(requestOptions, requestCallback);
         }).fail(dfd.reject);
 
         return dfd.promise;
@@ -146,24 +150,7 @@ var HDFS = function(params) {
             }
         };
         if ( fs.existsSync(localFile) ) {
-            var file = fs.createReadStream(localFile);
-            options.followAllRedirects = true;
-            options.multipart = [
-                {
-                body: fs.createReadStream(localFile),
-                'content-type' : 'application/octet-stream',
-                'Content-Type' : 'application/octet-stream',
-                }
-            ];
-            //options.multipart = {chunked: true, data: [
-            //]};
-
-            //options.formData = {
-                //field: 'val',
-                //attachments: [
-                    //file
-                //]
-            //};
+            options.file = localFile;
         } else {
             options.body = localFile;
         }
