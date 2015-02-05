@@ -87,3 +87,27 @@ Returns a promise.
 hdfs.remove('/path/to/remote/file').then(function() {
     console.log('yay');
 });
+
+## Errors
+
+All functions will return a promise that rejects with an error. That error can take two forms. If there is a permission error, the error will look like:
+
+```
+{
+    message: 'Permission denied: user=biblumix, access=WRITE, inode="/":hdfs:biadmin:drwxr-xr-x',
+    javaClassName: 'org.apache.hadoop.security.AccessControlException',
+    exception: 'AccessControlException',
+    args: {
+        user: 'biblumix',
+        access: 'WRITE',
+        inode: '"/":hdfs:biadmin:drwxr-xr-x'
+    }
+}
+```
+
+Otherwise, the error will simply include the error exception like:
+
+```
+{
+    exception: 'foo'
+}

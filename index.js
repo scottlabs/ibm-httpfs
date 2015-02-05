@@ -77,10 +77,8 @@ var HDFS = function(params) {
         var path = '/webhdfs/v1/';
 
         var url = 'https://' + server + ':' + port + path + query;
-        console.log(url);
 
         function requestCallback(error, response, body) {
-            console.log('r1');
             if ( error ) {
                 dfd.reject(error);
             } else {
@@ -88,13 +86,10 @@ var HDFS = function(params) {
                 // much about getting it right.
                 try { body = JSON.parse(body);
                 } catch(e) { }
-                console.log('r2');
 
                 if ( body && body['RemoteException'] ) {
-                    console.log('exception1');
                     switch(body.RemoteException.exception) {
                         case 'AccessControlException':
-                            console.log('acc');
                             var args = {};
                             var message = body.RemoteException.message;
                             var messageArgs = message.split('Permission denied:').pop();
@@ -112,20 +107,16 @@ var HDFS = function(params) {
                             });
                         break;
                         default:
-                            console.log('default');
                             dfd.reject(body.RemoteException);
                         break;
                     }
                 } else {
-                    console.log('body');
                     dfd.resolve(body);
                 }
             }
         };
 
-        console.log('a');
         getToken().then(function(j) {
-            console.log('b');
             var requestOptions = 
                 _.extend({
                 uri: url,
@@ -133,7 +124,6 @@ var HDFS = function(params) {
                 method: 'get'
             }, options); 
 
-            console.log(requestOptions);
 
             request(requestOptions, requestCallback);
         }).fail(dfd.reject);
@@ -156,7 +146,7 @@ var HDFS = function(params) {
             method: 'put',
         };
         dir += '/';
-        return makeRequest(dir+'?op=MKDIR', options);
+        return makeRequest(dir+'?op=MKDIRS', options);
     };
 
     function upload(remoteFile, localFile) {
