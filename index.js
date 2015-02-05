@@ -7,7 +7,7 @@ var jar;
 var jarSaved;
 var jarExpiration = 10 * 60 * 60 * 1000; // 10 hours
 
-var HDFS = function(params) {
+var HttpFS = function(params) {
     if ( ! params ) { throw new Error("You must provide params."); }
     if ( ! params.user ) { throw new Error("You must provide a user."); }
     if ( ! params.password ) { throw new Error("You must provide a password."); }
@@ -198,4 +198,4 @@ var HDFS = function(params) {
     };
 };
 
-module.exports = HDFS;
+module.exports = HttpFS;

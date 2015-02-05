@@ -6,7 +6,7 @@ var fs = require('fs');
 var path = require('path');
 var Q = require('q');
 
-var HDFS = require('../index');
+var HttpFS = require('../index');
 
 describe('HttpFS', function() {
     var files = {
@@ -28,53 +28,53 @@ describe('HttpFS', function() {
     }
 
     it('should throw an error if missing arguments', function() {
-        HDFS.bind(null).should.throw();
+        HttpFS.bind(null).should.throw();
 
-        HDFS.bind(null, {}).should.throw();
+        HttpFS.bind(null, {}).should.throw();
 
-        HDFS.bind(null, {
+        HttpFS.bind(null, {
             user: 'foo'
         }).should.throw();
 
-        HDFS.bind(null, {
+        HttpFS.bind(null, {
             user: 'foo',
             password: 'bar'
         }).should.throw();
 
-        HDFS.bind(null, {
+        HttpFS.bind(null, {
             url: 'http://www.google.com:80',
             password: 'bar'
         }).should.throw();
     });
 
     it('should throw an error if no port is provided', function() {
-        HDFS.bind(null, {
+        HttpFS.bind(null, {
             user : 'foo',
             password : 'bar',
             url : 'http://www.google.com'
         }).should.throw();
     });
 
-    it('should create a new HDFS', function() {
+    it('should create a new HttpFS', function() {
 
-        var hdfs = new HDFS({
+        var httpfs = new HttpFS({
             user : 'foo',
             password : 'bar',
-            url : 'https://bi-hadoop-prod-xxx.services.dal.bluemix.net:14443/webhdfs/v1/'
+            url : 'https://bi-hadoop-prod-xxx.services.dal.bluemix.net:14443/webhttpfs/v1/'
         });
 
-        hdfs.should.be.ok();
+        httpfs.should.be.ok();
     });
 
     it('should catch a login error', function(done) {
         this.timeout(5000);
-        hdfs = new HDFS({
+        httpfs = new HttpFS({
             user: 'foo',
             password: params.password,
             url: params.url
         });
 
-        hdfs.listDirectory('foo').fail(function(err) {
+        httpfs.listDirectory('foo').fail(function(err) {
             err.should.be.ok();
             err.message.should.equal('Login failed');
             err.exception.should.equal('LoginFailed');
@@ -84,8 +84,8 @@ describe('HttpFS', function() {
 
     it('should parse errors', function(done) {
         this.timeout(10000);
-        hdfs = new HDFS(params);
-        hdfs.listDirectory('foo').fail(function(err) {
+        httpfs = new HttpFS(params);
+        httpfs.listDirectory('foo').fail(function(err) {
             err.should.be.ok();
             err.message.indexOf('does not exist').should.be.above(-1);
             err.exception.should.equal('FileNotFoundException');
@@ -97,8 +97,8 @@ describe('HttpFS', function() {
         this.timeout(20000);
         var remoteFile = 'foo'; // this file won't work
 
-        hdfs = new HDFS(params);
-        hdfs.upload(remoteFile, 'bar').fail(function(err) {
+        httpfs = new HttpFS(params);
+        httpfs.upload(remoteFile, 'bar').fail(function(err) {
             err.args.user.should.equal(params.user);
             err.args.access.should.equal('WRITE');
             done();
@@ -106,16 +106,16 @@ describe('HttpFS', function() {
     });
 
     describe('List directory', function() {
-        // HDFS can be a li'l on the slow side
+        // HttpFS can be a li'l on the slow side
         this.timeout(20000);
-        var hdfs;
+        var httpfs;
 
         before(function() {
-            hdfs = new HDFS(params);
+            httpfs = new HttpFS(params);
         });
 
         it('should list a directory', function(done) {
-            hdfs.listDirectory('user').then(function(results) {
+            httpfs.listDirectory('user').then(function(results) {
                 results.should.be.ok();
                 results.length.should.be.above(0);
                 done();
@@ -124,19 +124,19 @@ describe('HttpFS', function() {
     });
 
     describe('Create directory', function() {
-        // HDFS can be a li'l on the slow side
+        // HttpFS can be a li'l on the slow side
         this.timeout(20000);
-        var hdfs;
+        var httpfs;
 
         before(function() {
-            hdfs = new HDFS(params);
+            httpfs = new HttpFS(params);
         });
 
         it('should create a directory', function(done) {
             var rootDir = 'tmp/';
             var dir = 'foo'+(new Date()).getTime();
-            hdfs.createDirectory(rootDir+dir).then(function(results) {
-                return hdfs.listDirectory(rootDir);
+            httpfs.createDirectory(rootDir+dir).then(function(results) {
+                return httpfs.listDirectory(rootDir);
             }).then(function(dirs) {
                 var exists = false;
                 dirs.map(function(fileName) {
@@ -145,7 +145,7 @@ describe('HttpFS', function() {
                     }
                 });
                 exists.should.equal(true);
-                return hdfs.remove(rootDir+dir);
+                return httpfs.remove(rootDir+dir);
             }).then(function() {
                 done();
             }).fail(done);
@@ -153,33 +153,32 @@ describe('HttpFS', function() {
 
         it('should show an error if you don\'t have permissions', function(done) {
             var dir = 'foo'+(new Date()).getTime();
-            hdfs.createDirectory(dir).fail(function(err){
+            httpfs.createDirectory(dir).fail(function(err){
                 err.exception.should.equal('AccessControlException');
-                console.log(err);
                 done();
             });
         });
     });
 
     describe('Upload', function() {
-        // HDFS can be a li'l on the slow side
+        // HttpFS can be a li'l on the slow side
         this.timeout(20000);
-        var hdfs;
+        var httpfs;
         var uploadedString;
         var uploadedFile;
 
         before(function() {
-            hdfs = new HDFS(params);
+            httpfs = new HttpFS(params);
         });
 
         after(function() {
             Q.fcall(function() {
                 if ( uploadedString ) {
-                    return hdfs.remove(files.string.remote);
+                    return httpfs.remove(files.string.remote);
                 }
             }).then(function() {
                 if ( uploadedFile ) {
-                    return hdfs.remove(files.file.remote);
+                    return httpfs.remove(files.file.remote);
                 }
             }).then(function() {
                 done();
@@ -187,8 +186,8 @@ describe('HttpFS', function() {
         });
 
         it('should upload a string', function(done) {
-            hdfs.upload(files.string.remote, files.string.contents).then(function(body, response) {
-                return hdfs.listDirectory('tmp');
+            httpfs.upload(files.string.remote, files.string.contents).then(function(body, response) {
+                return httpfs.listDirectory('tmp');
             }).then(function(results) {
                 results.should.be.ok();
                 results.should.contain.a.thing.with.property('pathSuffix', files.string.name);
@@ -198,8 +197,8 @@ describe('HttpFS', function() {
         });
 
         it('should upload a file', function(done) {
-            hdfs.upload(files.file.remote, files.file.contents).then(function(body, response) {
-                return hdfs.listDirectory('tmp');
+            httpfs.upload(files.file.remote, files.file.contents).then(function(body, response) {
+                return httpfs.listDirectory('tmp');
             }).then(function(results) {
                 results.should.be.ok();
                 results.should.contain.a.thing.with.property('pathSuffix', files.file.name);
@@ -211,12 +210,12 @@ describe('HttpFS', function() {
         it('should upload a big file', function(done) {
             // big file
             this.timeout(60000);
-            hdfs.upload(files.big.remote, files.big.contents).then(function(body, response) {
-                return hdfs.listDirectory('tmp');
+            httpfs.upload(files.big.remote, files.big.contents).then(function(body, response) {
+                return httpfs.listDirectory('tmp');
             }).then(function(results) {
                 results.should.be.ok();
                 results.should.contain.a.thing.with.property('pathSuffix', files.big.name);
-                return hdfs.remove(files.big.remote);
+                return httpfs.remove(files.big.remote);
             }).then(function() {
                 done();
             }).fail(done);
@@ -224,25 +223,25 @@ describe('HttpFS', function() {
     });
 
     describe('Download', function() {
-        // HDFS can be a li'l on the slow side
+        // HttpFS can be a li'l on the slow side
         this.timeout(20000);
-        var hdfs;
+        var httpfs;
 
         before(function(done) {
-            hdfs = new HDFS(params);
-            hdfs.upload(files.string.remote, files.string.contents).then(function(body, response) {
+            httpfs = new HttpFS(params);
+            httpfs.upload(files.string.remote, files.string.contents).then(function(body, response) {
                 done();
             }).fail(done);
         });
 
         after(function(done) {
-            hdfs.remove(files.string.remote).then(function() {
+            httpfs.remove(files.string.remote).then(function() {
                 done();
             }).fail(done);
         });
 
         it('should download a file\'s contents', function(done) {
-            hdfs.download(files.string.remote).then(function(response) {
+            httpfs.download(files.string.remote).then(function(response) {
                 response.should.equal(files.string.contents);
                 done();
             }).fail(done);
@@ -250,7 +249,7 @@ describe('HttpFS', function() {
 
         it('should save the file locally', function(done) {
             var localFile = 'tmp.txt';
-            hdfs.download(files.string.remote, localFile).then(function() {
+            httpfs.download(files.string.remote, localFile).then(function() {
                 var contents = fs.readFileSync(localFile, 'utf8');
                 contents.should.equal(files.string.contents);
                 fs.unlink(localFile, function() {
@@ -261,22 +260,22 @@ describe('HttpFS', function() {
     });
 
     describe('Remove file', function() {
-        // HDFS can be a li'l on the slow side
+        // HttpFS can be a li'l on the slow side
         this.timeout(20000);
-        var hdfs;
+        var httpfs;
         var fileContent = 'foo';
         var remoteFile = 'tmp/foo';
 
         before(function(done) {
-            hdfs = new HDFS(params);
-            hdfs.upload(remoteFile, fileContent).then(function(body, response) {
+            httpfs = new HttpFS(params);
+            httpfs.upload(remoteFile, fileContent).then(function(body, response) {
                 done();
             }).fail(done);
         });
 
         it('should remove a remote file', function(done) {
-            hdfs.remove(remoteFile).then(function() {
-                return hdfs.listDirectory('tmp');
+            httpfs.remove(remoteFile).then(function() {
+                return httpfs.listDirectory('tmp');
             }).then(function(results) {
                 results.should.be.ok();
                 results.should.not.contain.a.thing.with.property('pathSuffix', remoteFile.split('/').pop());
