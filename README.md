@@ -87,6 +87,7 @@ Returns a promise.
 hdfs.remove('/path/to/remote/file').then(function() {
     console.log('yay');
 });
+```
 
 ## Errors
 
