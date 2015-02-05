@@ -1,5 +1,5 @@
 {
-  "name": "ibm-httpfs",
+  "name": "ibm-hdfs",
   "version": "0.1.4",
   "description": "A wrapper for IBM's HttpFS service",
   "main": "index.js",
