@@ -164,25 +164,34 @@ describe('HttpFS', function() {
         // HttpFS can be a li'l on the slow side
         this.timeout(20000);
         var httpfs;
-        var uploadedString;
-        var uploadedFile;
+        var remoteFiles = [
+            files.string.remote.split('/').pop(),
+            files.file.remote.split('/').pop(),
+            files.big.remote.split('/').pop()
+        ];
 
-        before(function() {
+        before(function(done) {
             httpfs = new HttpFS(params);
+            done();
         });
 
-        after(function() {
-            Q.fcall(function() {
-                if ( uploadedString ) {
-                    return httpfs.remove(files.string.remote);
-                }
-            }).then(function() {
-                if ( uploadedFile ) {
-                    return httpfs.remove(files.file.remote);
-                }
+        after(function(done) {
+            httpfs.listDirectory('tmp').then(function(files) {
+                var promises = [];
+                files.map(function(file) {
+                    var fileName = file.pathSuffix;
+                    if ( remoteFiles.indexOf(fileName) !== -1 ) {
+                        promises.push(
+                            function() {
+                                return httpfs.remove(fileName)
+                            }
+                        );
+                    }
+                });
+                return Q.all(promises);
             }).then(function() {
                 done();
-            });
+            }).fail(done);
         });
 
         it('should upload a string', function(done) {
@@ -191,7 +200,6 @@ describe('HttpFS', function() {
             }).then(function(results) {
                 results.should.be.ok();
                 results.should.contain.a.thing.with.property('pathSuffix', files.string.name);
-                uploadedString = true;
                 done();
             }).fail(done);
         });
@@ -202,7 +210,6 @@ describe('HttpFS', function() {
             }).then(function(results) {
                 results.should.be.ok();
                 results.should.contain.a.thing.with.property('pathSuffix', files.file.name);
-                uploadedFile = true;
                 done();
             }).fail(done);
         });
@@ -215,8 +222,6 @@ describe('HttpFS', function() {
             }).then(function(results) {
                 results.should.be.ok();
                 results.should.contain.a.thing.with.property('pathSuffix', files.big.name);
-                return httpfs.remove(files.big.remote);
-            }).then(function() {
                 done();
             }).fail(done);
         });
@@ -283,5 +288,4 @@ describe('HttpFS', function() {
             }).fail(done);
         });
     });
-
 });
