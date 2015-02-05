@@ -77,52 +77,64 @@ var HDFS = function(params) {
         var path = '/webhdfs/v1/';
 
         var url = 'https://' + server + ':' + port + path + query;
+        console.log(url);
 
         function requestCallback(error, response, body) {
-                if ( error ) {
-                    dfd.reject(error);
-                } else {
-                    // try and parse as JSON, but don't worry too
-                    // much about getting it right.
-                    try { body = JSON.parse(body);
-                    } catch(e) { }
+            console.log('r1');
+            if ( error ) {
+                dfd.reject(error);
+            } else {
+                // try and parse as JSON, but don't worry too
+                // much about getting it right.
+                try { body = JSON.parse(body);
+                } catch(e) { }
+                console.log('r2');
 
-                    if ( body && body['RemoteException'] ) {
-                        switch(body.RemoteException.exception) {
-                            case 'AccessControlException':
-                                var args = {};
-                                var message = body.RemoteException.message;
-                                var messageArgs = message.split('Permission denied:').pop();
-                                messageArgs.split(',').map(function(arg) {
-                                    arg = arg.split('=');
-                                    if ( arg.length == 2 ) {
-                                        args[arg[0].trim()] = arg[1].trim();
-                                    }
-                                });
-                                dfd.reject({
-                                    message: message,
-                                    javaClassName: body.RemoteException.javaClassName,
-                                    exception: body.RemoteException.exception,
-                                    args: args 
-                                });
-                                break;
-                            default:
-                                dfd.reject(body.RemoteException);
-                                break;
-                        }
-                    } else {
-                        dfd.resolve(body);
+                if ( body && body['RemoteException'] ) {
+                    console.log('exception1');
+                    switch(body.RemoteException.exception) {
+                        case 'AccessControlException':
+                            console.log('acc');
+                            var args = {};
+                            var message = body.RemoteException.message;
+                            var messageArgs = message.split('Permission denied:').pop();
+                            messageArgs.split(',').map(function(arg) {
+                                arg = arg.split('=');
+                                if ( arg.length == 2 ) {
+                                    args[arg[0].trim()] = arg[1].trim();
+                                }
+                            });
+                            dfd.reject({
+                                message: message,
+                                javaClassName: body.RemoteException.javaClassName,
+                                exception: body.RemoteException.exception,
+                                args: args 
+                            });
+                        break;
+                        default:
+                            console.log('default');
+                            dfd.reject(body.RemoteException);
+                        break;
                     }
+                } else {
+                    console.log('body');
+                    dfd.resolve(body);
                 }
+            }
         };
 
+        console.log('a');
         getToken().then(function(j) {
+            console.log('b');
             var requestOptions = 
                 _.extend({
                 uri: url,
                 jar: j,
                 method: 'get'
             }, options); 
+
+            console.log(requestOptions);
+
             request(requestOptions, requestCallback);
         }).fail(dfd.reject);
 
@@ -137,6 +149,14 @@ var HDFS = function(params) {
                 return results.FileStatuses.FileStatus;
             }
         });
+    };
+
+    function createDirectory(dir) {
+        var options = {
+            method: 'put',
+        };
+        dir += '/';
+        return makeRequest(dir+'?op=MKDIR', options);
     };
 
     function upload(remoteFile, localFile) {
@@ -181,6 +201,7 @@ var HDFS = function(params) {
 
     return {
         listDirectory: listDirectory,
+        createDirectory: createDirectory,
         upload: upload,
         download: download,
         remove: remove

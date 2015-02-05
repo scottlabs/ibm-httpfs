@@ -123,6 +123,38 @@ describe('HDFS', function() {
         });
     });
 
+    describe.only('Create directory', function() {
+        // HDFS can be a li'l on the slow side
+        this.timeout(20000);
+        var hdfs;
+
+        before(function() {
+            hdfs = new HDFS(params);
+        });
+
+        it('should create a directory', function(done) {
+            var dir = 'foo'+(new Date()).getTime();
+            console.log('1');
+            hdfs.createDirectory(dir).then(function(results) {
+                console.log('2');
+                return hdfs.remove(dir);
+            }).then(function() {
+                return hdfs.list('/');
+            }).then(function(dirs) {
+                var exists = false;
+                dirs.map(function(dir) {
+                    if ( dir.pathSuffix === dir ) {
+                        exists = true;
+                    }
+                });
+                exists.should.not.equal(true);
+                return hdfs.remove(dir);
+            }).then(function() {
+                done();
+            }).fail(done);
+        });
+    });
+
     describe('Upload', function() {
         // HDFS can be a li'l on the slow side
         this.timeout(20000);
