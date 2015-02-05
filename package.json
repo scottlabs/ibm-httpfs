@@ -1,25 +1,26 @@
 {
   "name": "ibm-hdfs",
   "version": "0.1.3",
-  "description": "A wrapper for IBM's HDFS service",
+  "description": "A wrapper for IBM's HttpFS service",
   "main": "index.js",
   "scripts": {
     "test": "mocha test/test.js"
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:scottlabs/ibm-hdfs.git"
+    "url": "git@github.com:scottlabs/ibm-httpfs.git"
   },
   "keywords": [
     "ibm",
-    "hdfs"
+    "hdfs",
+    "httpfs"
   ],
   "author": "Kevin Scott",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/scottlabs/ibm-hdfs/issues"
+    "url": "https://github.com/scottlabs/ibm-httpfs/issues"
   },
-  "homepage": "https://github.com/scottlabs/ibm-hdfs",
+  "homepage": "https://github.com/scottlabs/ibm-httpfs",
   "dependencies": {
     "q": "^1.1.2",
     "request": "^2.51.0",
