@@ -11,9 +11,9 @@ I've only written functions for listing directories and uploading files. However
 # Use
 
 ```
-var HDFS = require('ibm-hdfs');
+var HttpFS = require('ibm-hdfs');
 
-var hdfs = new HDFS({
+var httpfs = new HttpFS({
     user: 'foo',
     password: 'bar',
     url: 'https://server:port/webhdfs/v1/'
@@ -24,12 +24,12 @@ var hdfs = new HDFS({
 
 ## List a directory
 
-The first argument is the remote directory on HDFS. This will list all the files in that remote directory.
+The first argument is the remote directory on HttpFS. This will list all the files in that remote directory.
 
 Returns a promise.
 
 ```
-hdfs.listDirectory('dir').then(function(response) {
+httpfs.listDirectory('dir').then(function(response) {
     console.log(response);
 });
 ```
@@ -45,12 +45,12 @@ Returns a promise.
 ```
 // using a string as data
 var contents = 'foo bar!';
-hdfs.upload('/path/to/remote/file', contents).then(function(response) {
+httpfs.upload('/path/to/remote/file', contents).then(function(response) {
     console.log(response);
 });
 
 // using a local file
-hdfs.upload('/path/to/remote/file', '/path/to/local/file.txt).then(function(response) {
+httpfs.upload('/path/to/remote/file', '/path/to/local/file.txt).then(function(response) {
     console.log(response);
 });
 ```
@@ -65,12 +65,12 @@ Returns a promise, with the first argument of the fulfillment function being the
 
 ```
 // retrieving contents directly
-hdfs.download('/path/to/remote/file').then(function(response) {
+httpfs.download('/path/to/remote/file').then(function(response) {
     console.log(response); // file contents
 });
 
 // specifying local file to download to
-hdfs.download('/path/to/remote/file', '/path/to/local/file').then(function(response) {
+httpfs.download('/path/to/remote/file', '/path/to/local/file').then(function(response) {
     console.log(response); // file contents
 });
 ```
@@ -84,7 +84,7 @@ Note: recursive is currently *not* supported, you'll have to implement this your
 Returns a promise.
 
 ```
-hdfs.remove('/path/to/remote/file').then(function() {
+httpfs.remove('/path/to/remote/file').then(function() {
     console.log('yay');
 });
 ```
