@@ -20,7 +20,7 @@ var HttpFS = function(params) {
     if ( url.length < 2 ) { throw "You must provide a valid URL."; }
     var server = url.shift();
 
-    function getCookie() {
+    function getCookie(options) {
         var dfd = Q.defer();
 
         var port = 8443;
@@ -30,6 +30,7 @@ var HttpFS = function(params) {
 
         var j = request.jar();
 
+        if ( options.verbose ) { console.info('getting cookie'); }
         request.post({
             url: url,
             form: {
@@ -38,17 +39,22 @@ var HttpFS = function(params) {
             },
             jar: j
         }, function (error, response, body) {
+            if ( options.verbose ) { console.info('error in cookie response'); }
             if ( error ) {
+                if ( options.verbose ) { console.info('error in cookie response'); }
                 dfd.reject(error);
             } else {
+                if ( options.verbose ) { console.info('cookie retreived'); }
                 var cookie_string = j.getCookieString(url).split('; ');
                 if ( cookie_string.length < 2 ) {
+                    if ( options.verbose ) { console.info('cookie login failed'); }
                     // this indicates that login was a failure
                     dfd.reject({
                         message: 'Login failed',
                         exception: 'LoginFailed'
                     });
                 } else {
+                    if ( options.verbose ) { console.info('cookie success'); }
                     dfd.resolve(j);
                 }
             }
@@ -57,15 +63,18 @@ var HttpFS = function(params) {
         return dfd.promise;
     };
 
-    function getToken() {
+    function getToken(options) {
         var dfd = Q.defer();
         if ( ! jar || jarSaved < (new Date()).getTime() - jarExpiration ) {
-            getCookie().then(function(newJar) {
+            if ( options.verbose ) { console.info('getting jar'); }
+            getCookie(options).then(function(newJar) {
+                if ( options.verbose ) { console.info('jar got'); }
                 jar = newJar;
                 jarSaved = (new Date()).getTime();
                 dfd.resolve(jar);
             }).fail(dfd.reject);
         } else {
+            if ( options.verbose ) { console.info('using existing jar'); }
             dfd.resolve(jar);
         }
         return dfd.promise;
@@ -79,9 +88,12 @@ var HttpFS = function(params) {
         var url = 'https://' + server + ':' + port + path + query;
 
         function requestCallback(error, response, body) {
+            if ( options.verbose ) { console.info('request callback'); }
             if ( error ) {
+                if ( options.verbose ) { console.info('request error', error); }
                 dfd.reject(error);
             } else {
+                if ( options.verbose ) { console.info('request back', body); }
                 // try and parse as JSON, but don't worry too
                 // much about getting it right.
                 try { body = JSON.parse(body);
@@ -116,7 +128,8 @@ var HttpFS = function(params) {
             }
         };
 
-        getToken().then(function(j) {
+        if ( options.verbose ) { console.info('getting token'); }
+        getToken(options).then(function(j) {
             var requestOptions = 
                 _.extend({
                 uri: url,
@@ -124,6 +137,7 @@ var HttpFS = function(params) {
                 method: 'get'
             }, options); 
 
+            if ( options.verbose ) { console.info('make request', requestOptions); }
 
             request(requestOptions, requestCallback);
         }).fail(dfd.reject);
