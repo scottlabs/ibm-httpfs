@@ -155,10 +155,9 @@ var HttpFS = function(params) {
         });
     };
 
-    function createDirectory(dir) {
-        var options = {
-            method: 'put',
-        };
+    function createDirectory(dir, options) {
+        if ( ! options ) { options = {}; }
+        options.method = 'put';
         dir += '/';
         return makeRequest(dir+'?op=MKDIRS', options);
     };
