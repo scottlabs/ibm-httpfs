@@ -21,6 +21,7 @@ var HttpFS = function(params) {
     var server = url.shift();
 
     function getCookie(options) {
+        if ( ! options ) { options = {}; }
         var dfd = Q.defer();
 
         var port = 8443;
@@ -64,6 +65,7 @@ var HttpFS = function(params) {
     };
 
     function getToken(options) {
+        if ( ! options ) { options = {}; }
         var dfd = Q.defer();
         if ( ! jar || jarSaved < (new Date()).getTime() - jarExpiration ) {
             if ( options.verbose ) { console.info('getting jar'); }
@@ -81,6 +83,7 @@ var HttpFS = function(params) {
     };
 
     function makeRequest(query, options) {
+        if ( ! options ) { options = {}; }
         var dfd = Q.defer();
         var port = 14443;
         var path = '/webhdfs/v1/';
