@@ -264,6 +264,51 @@ describe('HttpFS', function() {
         });
     });
 
+    describe('Move file', function() {
+        this.timeout(20000);
+        var httpfs;
+        var targetDir = 'bar';
+        var remoteFile = 'foo';
+
+        before(function(done) {
+            httpfs = new HttpFS(params);
+            httpfs.listDirectory('tmp').then(function(results) {
+                var remoteExists = false; 
+                results.map(function(result) {
+                    if ( result.pathSuffix.trim() === targetDir ) {
+                        remoteExists = true;
+                    }
+                });
+
+                if ( !remoteExists ) {
+                    return httpfs.createDirectory('tmp/'+targetDir);
+                }
+            }).then(function() {
+                return httpfs.upload('tmp/'+remoteFile, 'foo');
+            }).then(function() {
+                done();
+            }).fail(done);
+        });
+
+        after(function(done) {
+            httpfs.remove('tmp/'+targetDir+'/'+remoteFile).then(function() {
+                return httpfs.remove('tmp/'+targetDir);
+            }).then(function() {
+                done();
+            }).fail(done);
+        });
+
+        it('should move a remote file', function(done) {
+            httpfs.move('tmp/'+remoteFile, 'tmp/'+targetDir+'/'+remoteFile).then(function() {
+                return httpfs.listDirectory('tmp/'+targetDir);
+            }).then(function(results) {
+                results.should.be.ok();
+                results.should.contain.a.thing.with.property('pathSuffix', remoteFile);
+                done();
+            }).fail(done);
+        });
+    });
+
     describe('Remove file', function() {
         // HttpFS can be a li'l on the slow side
         this.timeout(20000);

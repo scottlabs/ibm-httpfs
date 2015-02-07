@@ -2,7 +2,7 @@
 
 This exposes IBM's HttpFS REST API for interacting with HDFS (Hadoop Distributed File System). It exposes a simple request function upon which additional routes can be created.
 
-I've only written functions for listing directories and uploading files. However, full documentation on IBM's HttpFS [can be found here](http://www-01.ibm.com/support/knowledgecenter/SSPT3X_3.0.0/com.ibm.swg.im.infosphere.biginsights.admin.doc/doc/admin_fileupload_rest_apis.html) if you want to implement other routes.
+I've only implementing a subset of functionality that I need.  Full documentation on IBM's HttpFS [can be found here](http://www-01.ibm.com/support/knowledgecenter/SSPT3X_3.0.0/com.ibm.swg.im.infosphere.biginsights.admin.doc/doc/admin_fileupload_rest_apis.html) if you want to implement other routes.
 
 # Install
 
@@ -85,6 +85,20 @@ Returns a promise.
 
 ```
 httpfs.remove('/path/to/remote/file').then(function() {
+    console.log('yay');
+});
+```
+
+## Move a file
+
+Move is an alias for rename. First argument is the source and second argument is the destination.
+
+Note: recursive is currently *not* supported, you'll have to implement this yourself.
+
+Returns a promise.
+
+```
+httpfs.move('/path/to/remote/file','/path/to/target/file').then(function() {
     console.log('yay');
 });
 ```

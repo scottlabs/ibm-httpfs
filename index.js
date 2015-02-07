@@ -140,7 +140,7 @@ var HttpFS = function(params) {
                 method: 'get'
             }, options); 
 
-            if ( options.verbose ) { console.info('make request', requestOptions); }
+            if ( options.verbose ) { console.info('make request', requestOptions.uri); }
 
             request(requestOptions, requestCallback);
         }).fail(dfd.reject);
@@ -205,12 +205,21 @@ var HttpFS = function(params) {
         });
     };
 
+    function move(source, destination, options) {
+        if ( ! options ) { options = {}; }
+        //curl -i -X PUT -b cookie.jar "http://host:port/webhdfs/v1/tmp/myDir?op=RENAME&destination=/tmp/yourDir"
+        options.method = 'PUT';
+        if ( destination.substring(0) !== '/' ) { destination = '/' + destination; }
+        return makeRequest(source+'?op=RENAME&destination='+destination, options);
+    };
+
     return {
         listDirectory: listDirectory,
         createDirectory: createDirectory,
         upload: upload,
         download: download,
-        remove: remove
+        remove: remove,
+        move: move
     };
 };
 
