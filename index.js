@@ -150,8 +150,8 @@ var HttpFS = function(params) {
 
     // Exposed functions
 
-    function listDirectory(dir) {
-        return makeRequest(dir+'?op=LISTSTATUS').then(function(results) {
+    function listDirectory(dir, options) {
+        return makeRequest(dir+'?op=LISTSTATUS', options).then(function(results) {
             if ( results && results.FileStatuses && results.FileStatuses.FileStatus ) {
                 return results.FileStatuses.FileStatus;
             }
