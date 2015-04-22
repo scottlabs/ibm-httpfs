@@ -1,3 +1,4 @@
+'use strict';
 var _ = require('underscore');
 var fs = require('fs');
 var request = require('request').defaults({ jar: true });
@@ -39,7 +40,7 @@ var HttpFS = function(params) {
                 j_password: params.password,
             },
             jar: j
-        }, function (error, response, body) {
+        }, function (error) {
             if ( options.verbose ) { console.info('error in cookie response'); }
             if ( error ) {
                 if ( options.verbose ) { console.info('error in cookie response'); }
@@ -62,7 +63,7 @@ var HttpFS = function(params) {
         });
 
         return dfd.promise;
-    };
+    }
 
     function getToken(options) {
         if ( ! options ) { options = {}; }
@@ -80,7 +81,7 @@ var HttpFS = function(params) {
             dfd.resolve(jar);
         }
         return dfd.promise;
-    };
+    }
 
     function makeRequest(query, options) {
         if ( ! options ) { options = {}; }
@@ -102,7 +103,7 @@ var HttpFS = function(params) {
                 try { body = JSON.parse(body);
                 } catch(e) { }
 
-                if ( body && body['RemoteException'] ) {
+                if ( body && body.RemoteException ) {
                     switch(body.RemoteException.exception) {
                         case 'AccessControlException':
                             var args = {};
@@ -110,7 +111,7 @@ var HttpFS = function(params) {
                             var messageArgs = message.split('Permission denied:').pop();
                             messageArgs.split(',').map(function(arg) {
                                 arg = arg.split('=');
-                                if ( arg.length == 2 ) {
+                                if ( arg.length === 2 ) {
                                     args[arg[0].trim()] = arg[1].trim();
                                 }
                             });
@@ -129,7 +130,7 @@ var HttpFS = function(params) {
                     dfd.resolve(body);
                 }
             }
-        };
+        }
 
         if ( options.verbose ) { console.info('getting token'); }
         getToken(options).then(function(j) {
@@ -146,7 +147,7 @@ var HttpFS = function(params) {
         }).fail(dfd.reject);
 
         return dfd.promise;
-    };
+    }
 
     // Exposed functions
 
@@ -156,18 +157,16 @@ var HttpFS = function(params) {
                 return results.FileStatuses.FileStatus;
             }
         });
-    };
+    }
 
     function createDirectory(dir, options) {
         if ( ! options ) { options = {}; }
         options.method = 'put';
         dir += '/';
         return makeRequest(dir+'?op=MKDIRS', options);
-    };
+    }
 
     function upload(remoteFile, localFile) {
-        var contents;
-
         var options = {
             method: 'put',
             headers: {
@@ -182,7 +181,7 @@ var HttpFS = function(params) {
         }
 
         return makeRequest(remoteFile + '?op=CREATE&data=true', options);
-    };
+    }
 
     function download(path, local) {
         if ( local ) {
@@ -197,13 +196,13 @@ var HttpFS = function(params) {
         } else {
             return makeRequest(path+'?op=OPEN');
         }
-    };
+    }
 
     function remove(path) {
         return makeRequest(path+'?op=DELETE', {
             method: 'DELETE'
         });
-    };
+    }
 
     function move(source, destination, options) {
         if ( ! options ) { options = {}; }
@@ -211,7 +210,7 @@ var HttpFS = function(params) {
         options.method = 'PUT';
         if ( destination.substring(0) !== '/' ) { destination = '/' + destination; }
         return makeRequest(source+'?op=RENAME&destination='+destination, options);
-    };
+    }
 
     return {
         listDirectory: listDirectory,
